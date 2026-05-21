@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Helpers</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --text: #e4e4e7;
+    --muted: #71717a;
+    --error: #ef4444;
+    --success: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    color-scheme: dark;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+  }
+
+  /* ── App header ── */
+  .app-header { text-align: center; margin-bottom: 0.75rem; }
+  .app-header h1 { font-size: 1.5rem; font-weight: 600; }
+
+  /* ── Main navigation ── */
+  .main-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+  }
+  .nav-btn {
+    padding: 0.6rem 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    text-align: center;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--text); }
+  .nav-btn.active {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Page containers ── */
+  .page { display: none; width: 100%; max-width: 600px; }
+  .page.active { display: block; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; text-align: center; }
+
+  /* ── SPAYD inner tabs ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 0.65rem 0;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none; border-left: none; border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; width: 100%; }
+  .tab-panel.active { display: block; }
+
+  /* ── Drop zone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.05);
+  }
+  .dropzone-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  .dropzone-text { color: var(--muted); font-size: 0.85rem; }
+  .dropzone-text b { color: var(--accent); }
+  .dropzone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .qr-preview {
+    max-height: 120px;
+    border-radius: 8px;
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Camera ── */
+  .camera-wrap {
+    position: relative;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #000;
+    display: none;
+  }
+  .camera-wrap video { width: 100%; display: block; }
+  .camera-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .scan-box {
+    width: 200px; height: 200px;
+    border: 2px solid var(--accent2);
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+  }
+  .camera-status {
+    text-align: center; color: var(--muted); font-size: 0.8rem; padding: 0.5rem;
+  }
+
+  /* ── Text input ── */
+  .input-area { width: 100%; margin-top: 1rem; margin-bottom: 0.5rem; }
+  textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    resize: none;
+    height: 4.5rem;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.3rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+  .btn-danger { background: var(--error); }
+
+  /* ── Error ── */
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid var(--error);
+    color: var(--error);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    width: 100%;
+    margin-top: 1rem;
+    display: none;
+  }
+
+  /* ── Result card ── */
+  .card {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+  .card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-header h2 {
+    font-size: 1rem; font-weight: 600;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .badge {
+    font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 99px;
+    background: rgba(76,205,196,0.15); color: var(--accent2);
+    font-weight: 600; letter-spacing: 0.03em;
+  }
+  .fields { padding: 0.5rem 0; }
+  .field {
+    display: flex; padding: 0.6rem 1.25rem;
+    transition: background 0.15s; cursor: pointer;
+  }
+  .field:hover { background: rgba(255,255,255,0.02); }
+  .field-label {
+    width: 140px; flex-shrink: 0; color: var(--muted);
+    font-size: 0.8rem; padding-top: 0.1rem;
+  }
+  .field-value { font-size: 0.9rem; font-weight: 500; word-break: break-all; }
+  .field-value.mono {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    letter-spacing: 0.04em;
+  }
+  .field-value .iban-group { margin-right: 0.5ch; }
+  .amount-row .field-value { font-size: 1.2rem; font-weight: 700; color: var(--accent2); }
+  .separator { height: 1px; background: var(--border); margin: 0.25rem 1.25rem; }
+  .section-label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); padding: 0.6rem 1.25rem 0.2rem; font-weight: 600;
+  }
+  .copy-hint {
+    color: var(--muted); font-size: 0.7rem; text-align: center;
+    padding: 0.6rem; border-top: 1px solid var(--border);
+  }
+  .copy-hint a { color: var(--accent); cursor: pointer; text-decoration: none; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success); color: #fff;
+    padding: 0.6rem 1.2rem; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 500;
+    transition: transform 0.3s ease; z-index: 10;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Exchange rates ── */
+  .exchange-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .currency-select {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    padding-right: 2.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    color-scheme: dark;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2371717a' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+  .currency-select:focus { outline: none; border-color: var(--accent); }
+  .exchange-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .rate-section { margin-bottom: 1.5rem; }
+  .rate-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .rate-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rate-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: var(--card);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .rate-table th, .rate-table td {
+    padding: 0.6rem 0.75rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .rate-table th:first-child, .rate-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
+  .rate-table th {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.02);
+  }
+  .rate-table tr:last-child td { border-bottom: none; }
+  .exchange-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .exchange-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid var(--error);
+    color: var(--error);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.75rem; }
+    .field { flex-direction: column; gap: 0.15rem; }
+    .field-label { width: auto; }
+    .main-nav { gap: 0.35rem; }
+    .nav-btn { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+    .rate-table th, .rate-table td { padding: 0.5rem 0.5rem; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>🧳 Travel Helpers</h1>
+</header>
+
+<nav class="main-nav">
+  <button class="nav-btn active" onclick="switchPage('spayd')">💳 SPAYD</button>
+  <button class="nav-btn" onclick="switchPage('exchange')">💱 Exchange</button>
+</nav>
+
+<!-- ═══════════════════════════════════
+     SPAYD Page
+     ═══════════════════════════════════ -->
+<div class="page active" id="page-spayd">
+  <p class="subtitle">Scan a QR code or paste a SPAYD string</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchSpaydTab('qr')">📷 QR Image</button>
+    <button class="tab" onclick="switchSpaydTab('camera')">🎥 Camera</button>
+    <button class="tab" onclick="switchSpaydTab('text')">⌨️ Text</button>
+  </div>
+
+  <div class="tab-panel active" id="panel-qr">
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="dropzone-icon">📷</div>
+      <div class="dropzone-text">
+        <b>Drop a QR image</b> here or click to browse<br>
+        <span style="font-size:0.75rem">PNG, JPG, GIF, BMP, WebP</span>
+      </div>
+      <img class="qr-preview" id="qr-preview" style="display:none">
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-camera">
+    <div class="camera-wrap" id="camera-wrap">
+      <video id="camera-video" playsinline></video>
+      <canvas id="camera-canvas" style="display:none"></canvas>
+      <div class="camera-overlay"><div class="scan-box"></div></div>
+    </div>
+    <div class="camera-status" id="camera-status"></div>
+    <div class="btn-row" style="margin-top:0.5rem; justify-content:center">
+      <button class="btn" id="btn-camera-start" onclick="startCamera()">▶ Start Camera</button>
+      <button class="btn btn-danger" id="btn-camera-stop" onclick="stopCamera()" style="display:none">⏹ Stop</button>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-text">
+    <div class="input-area">
+      <textarea id="input" placeholder="SPD*1.0*ACC:CZ1120100000002101727312*AM:1850.00*CC:CZK*..." spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="btn" onclick="parseText()">⚡ Parse</button>
+        <button class="btn btn-secondary" onclick="loadExample()">📋 Example</button>
+        <button class="btn btn-secondary" onclick="clearAll()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="spayd-error"></div>
+
+  <div class="card" id="result" style="display:none">
+    <div class="card-header">
+      <h2>🏦 Payment Details</h2>
+      <span class="badge" id="version-badge">SPAYD 1.0</span>
+    </div>
+    <div class="fields" id="fields"></div>
+    <div class="copy-hint">Click any value to copy · <a onclick="copyAll()">Copy all as text</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Exchange Rates Page
+     ═══════════════════════════════════ -->
+<div class="page" id="page-exchange">
+  <p class="subtitle">Quick reference exchange rates</p>
+
+  <div class="exchange-controls">
+    <select class="currency-select" id="currency-select" onchange="onCurrencyChange()"></select>
+    <button class="btn btn-secondary" onclick="refreshRates(true)" title="Refresh rates">🔄</button>
+  </div>
+
+  <div id="exchange-loading" class="exchange-loading" style="display:none">⏳ Loading exchange rates…</div>
+  <div id="exchange-error" class="exchange-error"></div>
+
+  <div id="exchange-content" style="display:none">
+    <div class="exchange-meta">
+      <span id="rate-date">Rates: —</span>
+      <span>Source: ECB via frankfurter.app</span>
+    </div>
+
+    <div class="rate-section">
+      <div class="rate-section-title" id="buy-title">Buy CZK</div>
+      <div class="rate-table-wrap">
+        <table class="rate-table" id="buy-table"></table>
+      </div>
+    </div>
+
+    <div class="rate-section">
+      <div class="rate-section-title" id="sell-title">Sell CZK</div>
+      <div class="rate-table-wrap">
+        <table class="rate-table" id="sell-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+/* ══════════════════════════════════════
+   Page Navigation
+   ══════════════════════════════════════ */
+function switchPage(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const idx = { spayd: 0, exchange: 1 }[name];
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+  localStorage.setItem('travelHelpers_activePage', name);
+  if (name === 'exchange' && !exchangeInitialized) initExchange();
+  if (name !== 'spayd') stopCamera();
+}
+
+// Restore last active page on load
+(function() {
+  const saved = localStorage.getItem('travelHelpers_activePage');
+  if (saved && saved !== 'spayd') switchPage(saved);
+})();
+
+/* ══════════════════════════════════════
+   SPAYD Viewer
+   ══════════════════════════════════════ */
+const CZ_BANKS = {
+  '0100':'Komerční banka','0300':'ČSOB','0600':'MONETA','0710':'ČNB',
+  '0800':'Česká spořitelna','2010':'Fio banka','2020':'MBANK',
+  '2030':'Hello bank!','2060':'Citfin','2070':'Moravský Peněžní Ústav',
+  '2100':'Hypoteční banka','2200':'Peněžní dům','2220':'Artesa',
+  '2240':'Poštová banka','2250':'Banka CREDITAS','2260':'NEY spořitelní družstvo',
+  '2275':'Podnikatelská družstevní záložna','2600':'Citibank','2700':'UniCredit Bank',
+  '3030':'Air Bank','3050':'BNP Paribas','3060':'PKO BP',
+  '3500':'ING Bank','4000':'Max banka','4300':'Národní rozvojová banka',
+  '5500':'Raiffeisenbank','5800':'J&T Banka','6000':'PPF banka',
+  '6100':'Equa bank','6200':'COMMERZBANK','6210':'mBank (BRE)',
+  '6300':'BNP Paribas (Fortis)','6700':'Všeobecná úverová banka',
+  '6800':'Sberbank CZ','7910':'Deutsche Sparkassen','7940':'Waldviertler Sparkasse',
+  '7950':'Raiffeisen im Waldviertel','7960':'Oberbank','7970':'Česká exportní banka',
+  '7980':'Wüstenrot hypoteční banka','7990':'Modrá pyramida',
+  '8030':'Raiffeisenbank im Stiftland','8040':'Oberbank AG',
+  '8060':'Sparkasse Oberlausitz-Niederschlesien',
+  '8090':'Česká spořitelna (Sparkasse)','8150':'HSBC',
+  '8190':'Sparkasse Niederbayern-Mitte',
+  '8200':'PRIVAT BANK','8215':'TRINITY BANK','8220':'Payment Execution',
+  '8230':'EEPAYS','8240':'Družstevní záložna Kredit','8250':'Bank of China',
+  '8260':'PAYMASTER','8265':'ICB','8270':'Fairplay Pay',
+  '8280':'B-Efekt','8290':'Poštová banka (SK)','8291':'CREDITAS',
+  '8292':'NLB Banka','8293':'Banka Creditas','8500':'PrivatBank'
+};
+
+/* ── SPAYD Tab switching ── */
+function switchSpaydTab(name) {
+  document.querySelectorAll('#page-spayd .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-spayd .tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  const idx = { qr: 0, camera: 1, text: 2 }[name];
+  document.querySelectorAll('#page-spayd .tab')[idx].classList.add('active');
+  if (name !== 'camera') stopCamera();
+}
+
+/* ── QR image scanning with jsQR ── */
+function decodeQRFromImage(imgEl) {
+  const canvas = document.createElement('canvas');
+  const scale = Math.max(1, Math.ceil(300 / Math.max(imgEl.naturalWidth, imgEl.naturalHeight)));
+  canvas.width = imgEl.naturalWidth * scale;
+  canvas.height = imgEl.naturalHeight * scale;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+  return code ? code.data : null;
+}
+
+function handleImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    showSpaydError('Please select an image file'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const preview = document.getElementById('qr-preview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      const data = decodeQRFromImage(img);
+      if (!data) { showSpaydError('No QR code found in this image. Try a clearer photo.'); return; }
+      if (!data.startsWith('SPD')) { showSpaydError('QR code found but it\'s not a SPAYD payment: ' + data.substring(0, 80)); return; }
+      parseAndShow(data);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('fileInput').addEventListener('change', e => handleImageFile(e.target.files[0]));
+
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+});
+
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      handleImageFile(item.getAsFile());
+      if (document.getElementById('page-spayd').classList.contains('active'))
+        switchSpaydTab('qr');
+      return;
+    }
+  }
+  if (document.activeElement === document.getElementById('input')) {
+    setTimeout(parseText, 50);
+  }
+});
+
+/* ── Camera scanning ── */
+let cameraStream = null;
+let cameraScanInterval = null;
+
+function startCamera() {
+  const video = document.getElementById('camera-video');
+  const wrap = document.getElementById('camera-wrap');
+  const status = document.getElementById('camera-status');
+  document.getElementById('btn-camera-start').style.display = 'none';
+  document.getElementById('btn-camera-stop').style.display = '';
+  status.textContent = 'Starting camera…';
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      cameraStream = stream;
+      video.srcObject = stream;
+      video.play();
+      wrap.style.display = 'block';
+      status.textContent = 'Point at a SPAYD QR code…';
+      cameraScanInterval = setInterval(scanCameraFrame, 250);
+    })
+    .catch(err => {
+      status.textContent = 'Camera error: ' + err.message;
+      document.getElementById('btn-camera-start').style.display = '';
+      document.getElementById('btn-camera-stop').style.display = 'none';
+    });
+}
+
+function scanCameraFrame() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+  if (code && code.data.startsWith('SPD')) {
+    stopCamera();
+    document.getElementById('camera-status').textContent = '✅ QR code found!';
+    parseAndShow(code.data);
+  }
+}
+
+function stopCamera() {
+  if (cameraScanInterval) { clearInterval(cameraScanInterval); cameraScanInterval = null; }
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  document.getElementById('camera-video').srcObject = null;
+  document.getElementById('camera-wrap').style.display = 'none';
+  document.getElementById('btn-camera-start').style.display = '';
+  document.getElementById('btn-camera-stop').style.display = 'none';
+}
+
+/* ── Text tab ── */
+function parseText() {
+  const input = document.getElementById('input').value.trim();
+  if (!input) { showSpaydError('Please enter a SPAYD string'); return; }
+  parseAndShow(input);
+}
+
+document.getElementById('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); parseText(); }
+});
+
+function loadExample() {
+  document.getElementById('input').value = 'SPD*1.0*ACC:CZ1120100000002101727312*AM:1850.00*CC:CZK*X-PER:7*X-VS:2026000111';
+  parseText();
+}
+
+/* ── SPAYD parser ── */
+function parseSpayd(str) {
+  str = str.trim();
+  const parts = str.split('*');
+  if (parts[0] !== 'SPD')
+    throw new Error('Not a SPAYD string — must start with "SPD*"');
+  if (!parts[1] || !parts[1].match(/^\d+\.\d+$/))
+    throw new Error('Invalid or missing protocol version');
+  const result = { _version: parts[1] };
+  for (let i = 2; i < parts.length; i++) {
+    const idx = parts[i].indexOf(':');
+    if (idx < 1) continue;
+    const key = parts[i].substring(0, idx);
+    const val = decodeURIComponent(parts[i].substring(idx + 1));
+    result[key] = val;
+  }
+  if (!result['ACC'])
+    throw new Error('Missing required ACC (account) field');
+  return result;
+}
+
+/* ── Render SPAYD result ── */
+function parseAndShow(spaydString) {
+  const errEl = document.getElementById('spayd-error');
+  const cardEl = document.getElementById('result');
+  const fieldsEl = document.getElementById('fields');
+  errEl.style.display = 'none';
+  cardEl.style.display = 'none';
+  document.getElementById('input').value = spaydString;
+
+  let data;
+  try { data = parseSpayd(spaydString); }
+  catch(e) { showSpaydError(e.message); return; }
+
+  document.getElementById('version-badge').textContent = `SPAYD ${data._version}`;
+  let html = '';
+
+  const accParts = (data['ACC'] || '').split('+');
+  const iban = accParts[0];
+  const bic = accParts[1] || null;
+  html += spaydField('IBAN', formatIban(iban), iban, true);
+  if (bic) html += spaydField('BIC / SWIFT', bic, bic);
+
+  if (iban.startsWith('CZ') && iban.length === 24) {
+    const bankCode = iban.substring(4, 8);
+    const prefix = iban.substring(8, 14).replace(/^0+/, '');
+    const number = iban.substring(14, 24).replace(/^0+/, '');
+    const local = (prefix ? prefix + '-' : '') + number + '/' + bankCode;
+    const bankName = CZ_BANKS[bankCode] || '';
+    html += spaydField('CZ Account', local + (bankName ? ` <span style="color:var(--muted)">(${bankName})</span>` : ''), local);
+  }
+
+  if (data['AM']) {
+    const cc = data['CC'] || '';
+    const amountNum = parseFloat(data['AM']);
+    const formatted = amountNum.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    html += '<div class="separator"></div>';
+    html += `<div class="field amount-row" onclick="copyVal('${data['AM']} ${cc}')">
+      <div class="field-label">Amount</div>
+      <div class="field-value">${formatted} ${cc}</div></div>`;
+  } else if (data['CC']) {
+    html += spaydField('Currency', data['CC'], data['CC']);
+  }
+
+  const symbols = [];
+  if (data['X-VS']) symbols.push(['Variable Symbol', data['X-VS']]);
+  if (data['X-SS']) symbols.push(['Specific Symbol', data['X-SS']]);
+  if (data['X-KS']) symbols.push(['Constant Symbol', data['X-KS']]);
+  if (symbols.length) {
+    html += '<div class="separator"></div>';
+    html += '<div class="section-label">Payment Symbols</div>';
+    symbols.forEach(([l, v]) => html += spaydField(l, v, v, true));
+  }
+
+  const extras = [];
+  if (data['RF'])  extras.push(['Reference', data['RF']]);
+  if (data['RN'])  extras.push(['Recipient', data['RN']]);
+  if (data['DT']) {
+    const d = data['DT'];
+    extras.push(['Due Date', d.substring(0,4)+'-'+d.substring(4,6)+'-'+d.substring(6,8)]);
+  }
+  if (data['PT'])  extras.push(['Payment Type', data['PT']]);
+  if (data['MSG']) extras.push(['Message', data['MSG']]);
+  if (data['NT'])  extras.push(['Notify Channel', data['NT'] === 'E' ? 'Email' : data['NT'] === 'P' ? 'Phone' : data['NT']]);
+  if (data['NTA']) extras.push(['Notify Contact', data['NTA']]);
+  if (data['X-PER']) extras.push(['Retry Days', data['X-PER']]);
+  if (data['X-ID']) extras.push(['Identifier', data['X-ID']]);
+  if (data['X-URL']) extras.push(['URL', data['X-URL']]);
+  if (data['CRC32']) extras.push(['CRC32', data['CRC32']]);
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('X-') && !['X-VS','X-SS','X-KS','X-PER','X-ID','X-URL'].includes(k))
+      extras.push([k, data[k]]);
+  });
+  if (extras.length) {
+    html += '<div class="separator"></div>';
+    html += '<div class="section-label">Details</div>';
+    extras.forEach(([l, v]) => html += spaydField(l, v, v));
+  }
+
+  fieldsEl.innerHTML = html;
+  cardEl.style.display = 'block';
+  cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ── SPAYD helpers ── */
+function formatIban(iban) {
+  return iban.replace(/(.{4})/g, '$1 ').trim()
+    .split(' ').map(g => `<span class="iban-group">${g}</span>`).join('');
+}
+
+function spaydField(label, display, copyValue, mono) {
+  const cls = mono ? 'field-value mono' : 'field-value';
+  return `<div class="field" onclick="copyVal('${(copyValue||'').replace(/'/g,"\\'")}')">
+    <div class="field-label">${label}</div>
+    <div class="${cls}">${display}</div></div>`;
+}
+
+function showSpaydError(msg) {
+  const el = document.getElementById('spayd-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+function clearAll() {
+  document.getElementById('input').value = '';
+  document.getElementById('spayd-error').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('qr-preview').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+/* ── Shared helpers ── */
+function copyVal(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied: ' + text));
+}
+
+function copyAll() {
+  const lines = [];
+  document.getElementById('fields').querySelectorAll('.field').forEach(f => {
+    const label = f.querySelector('.field-label')?.textContent || '';
+    const value = f.querySelector('.field-value')?.textContent?.trim() || '';
+    if (label && value) lines.push(`${label}: ${value}`);
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('All fields copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+/* ══════════════════════════════════════
+   Exchange Rates
+   ══════════════════════════════════════ */
+const REFERENCE_CURRENCIES = ['EUR', 'USD', 'ILS'];
+const AMOUNTS = [1, 5, 20, 100];
+const CACHE_KEY = 'travelHelpers_exchangeRates';
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
+const SELECTED_CURRENCY_KEY = 'travelHelpers_selectedCurrency';
+
+const CURRENCIES = {
+  CZK: { name: 'Czech Koruna',        flag: '🇨🇿' },
+  PLN: { name: 'Polish Złoty',        flag: '🇵🇱' },
+  HUF: { name: 'Hungarian Forint',    flag: '🇭🇺' },
+  RON: { name: 'Romanian Leu',        flag: '🇷🇴' },
+  BGN: { name: 'Bulgarian Lev',       flag: '🇧🇬' },
+  TRY: { name: 'Turkish Lira',        flag: '🇹🇷' },
+  GBP: { name: 'British Pound',       flag: '🇬🇧' },
+  CHF: { name: 'Swiss Franc',         flag: '🇨🇭' },
+  SEK: { name: 'Swedish Krona',       flag: '🇸🇪' },
+  NOK: { name: 'Norwegian Krone',     flag: '🇳🇴' },
+  DKK: { name: 'Danish Krone',        flag: '🇩🇰' },
+  ISK: { name: 'Icelandic Króna',     flag: '🇮🇸' },
+  THB: { name: 'Thai Baht',           flag: '🇹🇭' },
+  JPY: { name: 'Japanese Yen',        flag: '🇯🇵' },
+  KRW: { name: 'South Korean Won',    flag: '🇰🇷' },
+  INR: { name: 'Indian Rupee',        flag: '🇮🇳' },
+  IDR: { name: 'Indonesian Rupiah',   flag: '🇮🇩' },
+  MYR: { name: 'Malaysian Ringgit',   flag: '🇲🇾' },
+  SGD: { name: 'Singapore Dollar',    flag: '🇸🇬' },
+  PHP: { name: 'Philippine Peso',     flag: '🇵🇭' },
+  HKD: { name: 'Hong Kong Dollar',    flag: '🇭🇰' },
+  CNY: { name: 'Chinese Yuan',        flag: '🇨🇳' },
+  AUD: { name: 'Australian Dollar',   flag: '🇦🇺' },
+  NZD: { name: 'New Zealand Dollar',  flag: '🇳🇿' },
+  MXN: { name: 'Mexican Peso',        flag: '🇲🇽' },
+  BRL: { name: 'Brazilian Real',      flag: '🇧🇷' },
+  ZAR: { name: 'South African Rand',  flag: '🇿🇦' },
+  EUR: { name: 'Euro',                flag: '🇪🇺' },
+  USD: { name: 'US Dollar',           flag: '🇺🇸' },
+  ILS: { name: 'Israeli Shekel',      flag: '🇮🇱' },
+};
+
+let exchangeInitialized = false;
+let eurRates = null;
+let rateDate = null;
+
+function initExchange() {
+  exchangeInitialized = true;
+  populateCurrencySelect();
+  refreshRates(false);
+}
+
+function populateCurrencySelect() {
+  const select = document.getElementById('currency-select');
+  const saved = localStorage.getItem(SELECTED_CURRENCY_KEY) || 'CZK';
+  const codes = Object.keys(CURRENCIES).sort((a, b) => {
+    const aRef = REFERENCE_CURRENCIES.includes(a);
+    const bRef = REFERENCE_CURRENCIES.includes(b);
+    if (aRef !== bRef) return aRef ? 1 : -1;
+    return CURRENCIES[a].name.localeCompare(CURRENCIES[b].name);
+  });
+  select.innerHTML = codes.map(code => {
+    const c = CURRENCIES[code];
+    return `<option value="${code}" ${code === saved ? 'selected' : ''}>${c.flag} ${c.name} (${code})</option>`;
+  }).join('');
+}
+
+function onCurrencyChange() {
+  const code = document.getElementById('currency-select').value;
+  localStorage.setItem(SELECTED_CURRENCY_KEY, code);
+  if (eurRates) renderExchangeTables();
+}
+
+async function refreshRates(force) {
+  const loadingEl = document.getElementById('exchange-loading');
+  const errorEl = document.getElementById('exchange-error');
+  const contentEl = document.getElementById('exchange-content');
+
+  if (!force) {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < CACHE_DURATION) {
+          eurRates = data.rates;
+          rateDate = data.date;
+          renderExchangeTables();
+          return;
+        }
+      } catch(e) { /* ignore bad cache */ }
+    }
+  }
+
+  loadingEl.style.display = 'block';
+  errorEl.style.display = 'none';
+  contentEl.style.display = 'none';
+
+  try {
+    const resp = await fetch('https://api.frankfurter.app/latest?from=EUR');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    eurRates = data.rates;
+    eurRates['EUR'] = 1;
+    rateDate = data.date;
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      rates: eurRates,
+      date: rateDate,
+      timestamp: Date.now()
+    }));
+    renderExchangeTables();
+  } catch(err) {
+    errorEl.textContent = '⚠ Failed to fetch exchange rates: ' + err.message;
+    errorEl.style.display = 'block';
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        eurRates = data.rates;
+        rateDate = data.date;
+        renderExchangeTables();
+        errorEl.textContent += ' — showing cached rates';
+      } catch(e) { /* no luck */ }
+    }
+  } finally {
+    loadingEl.style.display = 'none';
+  }
+}
+
+function convert(amount, fromCode, toCode) {
+  if (fromCode === toCode) return amount;
+  const inEur = fromCode === 'EUR' ? amount : amount / eurRates[fromCode];
+  return toCode === 'EUR' ? inEur : inEur * eurRates[toCode];
+}
+
+function fmtRate(val) {
+  const abs = Math.abs(val);
+  let decimals;
+  if (abs >= 1) decimals = 2;
+  else if (abs >= 0.01) decimals = 4;
+  else decimals = 6;
+  return val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function renderExchangeTables() {
+  const target = document.getElementById('currency-select').value;
+  const info = CURRENCIES[target];
+  const refs = REFERENCE_CURRENCIES.filter(c => c !== target);
+
+  document.getElementById('buy-title').textContent = `${info.flag} Buy ${target}`;
+  document.getElementById('sell-title').textContent = `${info.flag} Sell ${target}`;
+  document.getElementById('rate-date').textContent = `Rates: ${rateDate}`;
+
+  // "Buy" table: ref currency → target
+  let html = '<thead><tr><th></th>';
+  refs.forEach(r => html += `<th>${CURRENCIES[r].flag} ${r}</th>`);
+  html += '</tr></thead><tbody>';
+  AMOUNTS.forEach(amt => {
+    html += `<tr><td>${amt}</td>`;
+    refs.forEach(r => {
+      const val = convert(amt, r, target);
+      html += `<td>${fmtRate(val)} ${target}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('buy-table').innerHTML = html;
+
+  // "Sell" table: target → ref currency
+  html = '<thead><tr><th></th>';
+  refs.forEach(r => html += `<th>${CURRENCIES[r].flag} ${r}</th>`);
+  html += '</tr></thead><tbody>';
+  AMOUNTS.forEach(amt => {
+    html += `<tr><td>${amt} ${target}</td>`;
+    refs.forEach(r => {
+      const val = convert(amt, target, r);
+      html += `<td>${fmtRate(val)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('sell-table').innerHTML = html;
+
+  document.getElementById('exchange-content').style.display = 'block';
+}
+</script>
+</body>
+</html>
