@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# Pre-commit gate: fast staged-file lint via lint-staged, then the full
+# gate (lint with zero-warning floor, coverage with 90% line floor,
+# supply-chain audit).
+# Set AIDOR_SKIP_GATE=1 to bypass (CI/automated rebases only).
+if [ "${AIDOR_SKIP_GATE:-0}" = "1" ]; then
+  exit 0
+fi
+npx --no-install lint-staged && npm run gate
+

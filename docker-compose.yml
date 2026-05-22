@@ -1,0 +1,11 @@
+services:
+  travel-helpers:
+    build: .
+    ports:
+      - "7777:3000"
+    volumes:
+      - embassy-cache:/app/cache
+    restart: unless-stopped
+
+volumes:
+  embassy-cache:

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Content-Security-Policy: lock the browser down to first-party origin
+     for scripts, styles, fonts and outbound XHRs. The ONLY external
+     connect target is https://api.frankfurter.dev (used by exchange.js
+     for ECB rates); every other XHR must go to 'self'. img-src allows
+     'self', data: (favicon SVG) and blob: (in-memory QR previews) only —
+     no external image origins. 'unsafe-inline' for script-src is a
+     transitional compromise because the static page still uses inline
+     onclick attributes wired to author-controlled functions; the
+     dynamic rendering paths that touch QR / scraped embassy data were
+     refactored to DOM APIs (no innerHTML on untrusted input) so an
+     HTML-injection vector no longer exists at runtime. Even with
+     'unsafe-inline', this CSP still blocks external script origins
+     (CDN injection), eval(), plugins, frames, and arbitrary outbound
+     connections. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.frankfurter.dev; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Travel Helpers</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧳</text></svg>">
+<link rel="stylesheet" href="style.css">
+<script src="/vendor/jsQR.min.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <h1>🧳 Travel Helpers</h1>
+  <select class="global-country-select" id="global-country-select" onchange="onGlobalCountryChange()"></select>
+</header>
+
+<nav class="main-nav">
+  <button class="nav-btn active" data-page="exchange" onclick="switchPage('exchange')">💱 Rates</button>
+  <button class="nav-btn" data-page="tip" onclick="switchPage('tip')">🧮 Tip</button>
+  <button class="nav-btn" data-page="emergency" onclick="switchPage('emergency')">🆘 SOS</button>
+  <button class="nav-btn" data-page="road" onclick="switchPage('road')">🚗 Road</button>
+  <button class="nav-btn" data-page="pharmacy" onclick="switchPage('pharmacy')">💊 Pharmacy</button>
+  <button class="nav-btn" data-page="transit" onclick="switchPage('transit')">🚆 Transit</button>
+  <button class="nav-btn" data-page="payment" onclick="switchPage('payment')">💳 Payment</button>
+  <button class="nav-btn" data-page="qr" onclick="switchPage('qr')" id="nav-qr" style="display:none">💳 QR</button>
+</nav>
+
+<!-- ═══════════════════════════════════
+     SPAYD Page
+     ═══════════════════════════════════ -->
+<div class="page" id="page-qr">
+  <p class="subtitle">Scan or paste a payment QR code</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchSpaydTab('qr')">📷 QR Image</button>
+    <button class="tab" onclick="switchSpaydTab('camera')">🎥 Camera</button>
+    <button class="tab" onclick="switchSpaydTab('text')">⌨️ Text</button>
+  </div>
+
+  <div class="tab-panel active" id="panel-qr">
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="dropzone-icon">📷</div>
+      <div class="dropzone-text">
+        <b>Drop a QR image</b> here or click to browse<br>
+        <span style="font-size:0.75rem">PNG, JPG, GIF, BMP, WebP</span>
+      </div>
+      <img class="qr-preview" id="qr-preview" style="display:none">
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-camera">
+    <div class="camera-wrap" id="camera-wrap">
+      <video id="camera-video" playsinline></video>
+      <canvas id="camera-canvas" style="display:none"></canvas>
+      <div class="camera-overlay"><div class="scan-box"></div></div>
+    </div>
+    <div class="camera-status" id="camera-status"></div>
+    <div class="btn-row" style="margin-top:0.5rem; justify-content:center">
+      <button class="btn" id="btn-camera-start" onclick="startCamera()">▶ Start Camera</button>
+      <button class="btn btn-danger" id="btn-camera-stop" onclick="stopCamera()" style="display:none">⏹ Stop</button>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-text">
+    <div class="input-area">
+      <textarea id="input" placeholder="SPD*1.0*ACC:CZ1120100000002101727312*AM:1850.00*CC:CZK*..." spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="btn" onclick="parseText()">⚡ Parse</button>
+        <button class="btn btn-secondary" onclick="loadExample()">📋 Example</button>
+        <button class="btn btn-secondary" onclick="clearAll()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="spayd-error"></div>
+
+  <div class="card" id="result" style="display:none">
+    <div class="card-header">
+      <h2>🏦 Payment Details</h2>
+      <span class="badge" id="version-badge">SPAYD 1.0</span>
+    </div>
+    <div class="fields" id="fields"></div>
+    <div class="copy-hint">Click any value to copy · <a onclick="copyAll()">Copy all as text</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Exchange Rates Page
+     ═══════════════════════════════════ -->
+<div class="page active" id="page-exchange">
+  <p class="subtitle">Quick reference exchange rates</p>
+
+  <div class="exchange-controls">
+    <select class="currency-select" id="currency-select" onchange="onCurrencyChange()"></select>
+    <button class="btn btn-secondary" onclick="refreshRates(true)" title="Refresh rates">🔄</button>
+  </div>
+
+  <div id="exchange-loading" class="exchange-loading" style="display:none">⏳ Loading exchange rates…</div>
+  <div id="exchange-error" class="exchange-error"></div>
+
+  <div id="exchange-content" style="display:none">
+    <div class="exchange-meta">
+      <span id="rate-date">Rates: —</span>
+      <span>Source: ECB via frankfurter.dev</span>
+    </div>
+
+    <div id="rate-tables"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Tip Calculator Page
+     ═══════════════════════════════════ -->
+<div class="page" id="page-tip">
+  <p class="subtitle">Tip calculator by country</p>
+  <div class="tip-input-wrap">
+    <label class="tip-label" for="tip-bill">Bill amount</label>
+    <div class="tip-input-row">
+      <input class="tip-input" type="number" id="tip-bill" placeholder="0.00" min="0" step="any" oninput="calculateTips()">
+      <span class="tip-currency-badge" id="tip-currency">CZK</span>
+    </div>
+  </div>
+  <div id="tip-results"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Emergency Info Page
+     ═══════════════════════════════════ -->
+<div class="page" id="page-emergency">
+  <p class="subtitle">Emergency contacts &amp; numbers</p>
+  <div id="sos-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Road Rules Page
+     ═══════════════════════════════════ -->
+<div class="page" id="page-road">
+  <p class="subtitle">Traffic rules &amp; speed limits</p>
+  <div id="road-content"></div>
+</div>
+
+<!-- Pharmacy Page -->
+<div class="page" id="page-pharmacy">
+  <p class="subtitle">Pharmacy guide for your destination</p>
+  <div id="pharmacy-content"></div>
+</div>
+
+<!-- Transit Cards Page -->
+<div class="page" id="page-transit">
+  <p class="subtitle">Public transit cards &amp; tips</p>
+  <div id="transit-content"></div>
+</div>
+
+<!-- Payment Norms Page -->
+<div class="page" id="page-payment">
+  <p class="subtitle">How to pay in your destination</p>
+  <div id="payment-content"></div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script src="qr-parsers.js"></script>
+<script src="url-safety.js"></script>
+<script src="spayd.js"></script>
+<script src="exchange.js"></script>
+<script src="countries.js"></script>
+<script src="tip.js"></script>
+<script src="emergency.js"></script>
+<script src="road.js"></script>
+<script src="pharmacy.js"></script>
+<script src="transit.js"></script>
+<script src="payment.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "travel-helpers",
+  "version": "1.0.0",
+  "description": "Travel helpers multitool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/run-tests.js",
+    "lint": "eslint . --max-warnings=0",
+    "coverage": "c8 --reporter=text --reporter=html --report-dir=coverage --lines 90 --include=server.js --include=public/qr-parsers.js --include=public/spayd.js --include=public/emergency.js --include=public/url-safety.js --include=public/app.js --include=public/countries.js --include=public/exchange.js --include=public/tip.js --include=public/road.js --include=public/pharmacy.js --include=public/transit.js --include=public/payment.js node test/run-tests.js",
+    "audit": "npm audit --audit-level=high",
+    "security": "npm audit --audit-level=high",
+    "gate": "npm run lint && npm run coverage && npm run audit",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.js": "eslint --max-warnings=0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3",
+    "eslint": "^9.18.0",
+    "husky": "^9.1.7",
+    "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.10",
+    "supertest": "^7.0.0"
+  }
+}
+

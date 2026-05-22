@@ -1,0 +1,10 @@
+.serena/
+node_modules/
+cache/
+coverage/
+AGENTS.md
+.aidor/
+.github/hooks/aidor.json
+.github/agents/aidor-coder.md
+.github/agents/aidor-reviewer.md
+.github/aidor-backups/
