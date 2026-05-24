@@ -659,6 +659,62 @@ textarea::placeholder { color: var(--muted); }
   color: var(--muted);
 }
 
+/* ── Driving side warning ── */
+.drive-warning {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid var(--error);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Severity badges ── */
+.severity-high { color: #ef4444; }
+.severity-medium { color: #f59e0b; }
+.severity-low { color: #22c55e; }
+
+/* ── Meal time cards ── */
+.meal-time-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.meal-time-label { font-weight: 600; font-size: 0.9rem; }
+.meal-time-hours { color: var(--accent2); font-weight: 600; font-size: 0.9rem; }
+
+/* ── Checklist ── */
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item::before { content: '☐'; color: var(--accent); flex-shrink: 0; }
+
+/* ── ZTL city card ── */
+.ztl-city {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+.ztl-city-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.ztl-city-zone { font-size: 0.8rem; color: var(--muted); }
+.ztl-city-hours { font-size: 0.8rem; color: var(--accent2); margin-top: 0.15rem; }
+.ztl-city-tip { font-size: 0.8rem; font-style: italic; margin-top: 0.15rem; }
+
 /* ── Mobile ── */
 @media (max-width: 480px) {
   body { padding: 1rem 0.75rem; }

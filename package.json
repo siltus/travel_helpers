@@ -7,7 +7,7 @@
     "start": "node server.js",
     "test": "node test/run-tests.js",
     "lint": "eslint . --max-warnings=0",
-    "coverage": "c8 --reporter=text --reporter=html --report-dir=coverage --lines 90 --include=server.js --include=public/qr-parsers.js --include=public/spayd.js --include=public/emergency.js --include=public/url-safety.js --include=public/app.js --include=public/countries.js --include=public/exchange.js --include=public/tip.js --include=public/road.js --include=public/pharmacy.js --include=public/transit.js --include=public/payment.js node test/run-tests.js",
+    "coverage": "c8 --reporter=text --reporter=html --report-dir=coverage --lines 90 --include=server.js --include=public/qr-parsers.js --include=public/spayd.js --include=public/emergency.js --include=public/url-safety.js --include=public/app.js --include=public/countries.js --include=public/exchange.js --include=public/tip.js --include=public/road.js --include=public/pharmacy.js --include=public/transit.js --include=public/payment.js --include=public/rental.js --include=public/ztl.js --include=public/meals.js node test/run-tests.js",
     "audit": "npm audit --audit-level=high",
     "security": "npm audit --audit-level=high",
     "gate": "npm run lint && npm run coverage && npm run audit",

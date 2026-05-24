@@ -86,6 +86,9 @@ function onGlobalCountryChange() {
   if (typeof pharmacyInitialized !== 'undefined' && pharmacyInitialized) renderPharmacy();
   if (typeof transitInitialized !== 'undefined' && transitInitialized) renderTransit();
   if (typeof paymentInitialized !== 'undefined' && paymentInitialized) renderPayment();
+  if (typeof rentalInitialized !== 'undefined' && rentalInitialized) renderRental();
+  if (typeof ztlInitialized !== 'undefined' && ztlInitialized) renderZtl();
+  if (typeof mealsInitialized !== 'undefined' && mealsInitialized) renderMeals();
   // Update QR tab visibility
   updateQrTabVisibility();
 }

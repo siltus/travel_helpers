@@ -13,6 +13,9 @@ function switchPage(name) {
   if (name === 'pharmacy' && !pharmacyInitialized) initPharmacy();
   if (name === 'transit' && !transitInitialized) initTransit();
   if (name === 'payment' && !paymentInitialized) initPayment();
+  if (name === 'rental' && !rentalInitialized) initRental();
+  if (name === 'ztl' && !ztlInitialized) initZtl();
+  if (name === 'meals' && !mealsInitialized) initMeals();
   if (name !== 'qr') stopCamera();
   // Close hamburger menu on mobile
   var nav = document.querySelector('.main-nav');
@@ -65,4 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Don't restore to QR page if current country doesn't support it
   if (saved === 'qr' && !QR_COUNTRY_FORMAT[getSelectedCountry()]) saved = 'exchange';
   switchPage(saved);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 });

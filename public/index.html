@@ -21,7 +21,11 @@
 <title>Travel Helpers</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧳</text></svg>">
 <link rel="stylesheet" href="style.css">
-<script src="/vendor/jsQR.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6c63ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
 
@@ -41,6 +45,9 @@
   <button class="nav-btn" data-page="pharmacy" onclick="switchPage('pharmacy')">💊 Pharmacy</button>
   <button class="nav-btn" data-page="transit" onclick="switchPage('transit')">🚆 Transit</button>
   <button class="nav-btn" data-page="payment" onclick="switchPage('payment')">💳 Payment</button>
+  <button class="nav-btn" data-page="rental" onclick="switchPage('rental')">🚗 Rental</button>
+  <button class="nav-btn" data-page="ztl" onclick="switchPage('ztl')">⚠️ ZTL</button>
+  <button class="nav-btn" data-page="meals" onclick="switchPage('meals')">🍽️ Meals</button>
   <button class="nav-btn" data-page="qr" onclick="switchPage('qr')" id="nav-qr" style="display:none">💳 QR</button>
 </nav>
 
@@ -177,6 +184,21 @@
   <div id="payment-content"></div>
 </div>
 
+<div class="page" id="page-rental">
+  <p class="subtitle">Rental car checklist &amp; tips</p>
+  <div id="rental-content"></div>
+</div>
+
+<div class="page" id="page-ztl">
+  <p class="subtitle">Restricted traffic zones &amp; low emission zones</p>
+  <div id="ztl-content"></div>
+</div>
+
+<div class="page" id="page-meals">
+  <p class="subtitle">Meal times &amp; dining customs</p>
+  <div id="meals-content"></div>
+</div>
+
 <div class="toast" id="toast">Copied!</div>
 
 <script src="qr-parsers.js"></script>
@@ -190,6 +212,10 @@
 <script src="pharmacy.js"></script>
 <script src="transit.js"></script>
 <script src="payment.js"></script>
+<script src="rental.js"></script>
+<script src="ztl.js"></script>
+<script src="meals.js"></script>
+<!-- app.js registers sw.js for offline/PWA support -->
 <script src="app.js"></script>
 </body>
 </html>

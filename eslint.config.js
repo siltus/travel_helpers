@@ -14,6 +14,7 @@ const globals = {
     FileReader: 'readonly', Image: 'readonly', URL: 'readonly',
     Event: 'readonly', MouseEvent: 'readonly',
     requestAnimationFrame: 'readonly', cancelAnimationFrame: 'readonly',
+    self: 'readonly', caches: 'readonly',
     module: 'writable', exports: 'writable',
     // jsQR loaded from /vendor/jsQR.min.js — global at runtime.
     jsQR: 'readonly',
@@ -62,6 +63,12 @@ const publicSharedGlobals = {
   transitInitialized: 'writable', initTransit: 'readonly', renderTransit: 'readonly',
   // payment.js
   paymentInitialized: 'writable', initPayment: 'readonly', renderPayment: 'readonly',
+  // rental.js
+  rentalInitialized: 'writable', initRental: 'readonly', renderRental: 'readonly',
+  // ztl.js
+  ztlInitialized: 'writable', initZtl: 'readonly', renderZtl: 'readonly',
+  // meals.js
+  mealsInitialized: 'writable', initMeals: 'readonly', renderMeals: 'readonly',
   // spayd.js
   switchSpaydTab: 'readonly', stopCamera: 'readonly', startCamera: 'readonly',
   parseAndShow: 'readonly', parseText: 'readonly', loadExample: 'readonly',
