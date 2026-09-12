@@ -207,6 +207,20 @@ const PHARMACY_DATA = {
       'Prices significantly cheaper than Western Europe',
     ],
   },
+  AZ: {
+    sign: 'Green cross or "Aptek"',
+    name: 'Aptek',
+    hours: 'Often open daily, commonly 9:00–20:00',
+    drugs: [
+      { generic: 'Ibuprofen', local: 'Ibuprofen', otc: true },
+      { generic: 'Paracetamol', local: 'Paracetamol', otc: true },
+      { generic: 'Antihistamine', local: 'Cetirizine', otc: true },
+    ],
+    notes: [
+      'Ask the pharmacist for the generic medicine name',
+      'Availability and prescription requirements can vary',
+    ],
+  },
   GB: {
     sign: 'Green cross',
     name: 'Pharmacy / Chemist',

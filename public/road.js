@@ -199,6 +199,17 @@ const ROAD_DATA = {
       { type: 'warning', value: '!', name: 'Jandarma checkpoints', desc: 'Military police checkpoints on rural roads — stop when signaled' },
     ],
   },
+  AZ: {
+    speed: { urban: 60, rural: 90, motorway: 110 },
+    alcohol: '0.0‰ — zero tolerance',
+    rules: [
+      'Right-hand traffic',
+      'Seat belts are required',
+      'Carry your driving licence, registration, and insurance documents',
+      'Road conditions can vary outside Baku and major highways',
+    ],
+    signs: [],
+  },
   GB: {
     speed: { urban: '30 mph (48)', rural: '60 mph (97)', motorway: '70 mph (113)' },
     alcohol: '0.8‰ (0.5‰ in Scotland)',

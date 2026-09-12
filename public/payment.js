@@ -141,6 +141,17 @@ const PAYMENT_DATA = {
       'Some ATMs push DCC hard — always refuse it',
     ],
   },
+  AZ: {
+    currency: 'AZN (Azerbaijani Manat)',
+    cashVsCard: 'Cards are widely accepted in Baku; carry cash for smaller shops and travel outside cities.',
+    contactless: 'Common in Baku hotels, restaurants, and larger shops.',
+    eurAccepted: 'No. Exchange to AZN.',
+    atm: 'Bank ATMs are common in Baku and accept major international cards.',
+    tips: [
+      'Choose AZN when a terminal offers currency conversion',
+      'Keep small notes for taxis, markets, and rural areas',
+    ],
+  },
   GB: {
     currency: 'GBP (British Pound)',
     cashVsCard: 'Very card-friendly. Contactless is the norm.',

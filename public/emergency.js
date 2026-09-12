@@ -103,6 +103,13 @@ const EMERGENCY_DATA = {
       'Gendarmerie (rural areas): 156',
     ],
   },
+  AZ: {
+    general: '112', police: '102', ambulance: '103', fire: '101',
+    notes: [
+      '112 is the unified emergency number',
+      'Operators may have limited English outside Baku',
+    ],
+  },
   GB: {
     general: '999', police: '999', ambulance: '999', fire: '999',
     notes: [

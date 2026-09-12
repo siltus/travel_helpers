@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Content-Security-Policy: lock the browser down to first-party origin
-     for scripts, styles, fonts and outbound XHRs. The ONLY external
-     connect target is https://api.frankfurter.dev (used by exchange.js
-     for ECB rates); every other XHR must go to 'self'. img-src allows
+     for scripts, styles, fonts and outbound XHRs. The external connect
+     targets are https://api.frankfurter.dev and https://open.er-api.com
+     (used by exchange.js for rates); every other XHR must go to 'self'.
+     img-src allows
      'self', data: (favicon SVG) and blob: (in-memory QR previews) only —
      no external image origins. 'unsafe-inline' for script-src is a
      transitional compromise because the static page still uses inline
@@ -17,7 +18,7 @@
      'unsafe-inline', this CSP still blocks external script origins
      (CDN injection), eval(), plugins, frames, and arbitrary outbound
      connections. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.frankfurter.dev; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.frankfurter.dev https://open.er-api.com; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Travel Helpers</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧳</text></svg>">
 <link rel="stylesheet" href="style.css">
@@ -128,7 +129,7 @@
   <div id="exchange-content" style="display:none">
     <div class="exchange-meta">
       <span id="rate-date">Rates: —</span>
-      <span>Source: ECB via frankfurter.dev</span>
+      <span>Source: ECB via frankfurter.dev; fallback rates by ExchangeRate-API</span>
     </div>
 
     <div id="rate-tables"></div>

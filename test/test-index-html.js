@@ -16,6 +16,7 @@ const path = require('path');
 
 const repoRoot = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(repoRoot, 'public', 'index.html'), 'utf8');
+const sw = fs.readFileSync(path.join(repoRoot, 'public', 'sw.js'), 'utf8');
 
 let passed = 0;
 let failed = 0;
@@ -59,7 +60,7 @@ function testExactlyOneCspMeta() {
 }
 
 function testConnectSrcIsNarrow() {
-  section('connect-src is narrowed to self + frankfurter API (no `https:` wildcard) — review 0004 regression');
+  section('connect-src is narrowed to the rates APIs (no `https:` wildcard) — review 0004 regression');
   const matches = extractCspContent(html);
   if (matches.length !== 1) { assert(false, 'cannot evaluate connect-src without a unique CSP'); return; }
   const csp = parseCsp(matches[0]);
@@ -72,6 +73,10 @@ function testConnectSrcIsNarrow() {
   assert(
     tokens.includes('https://api.frankfurter.dev'),
     'connect-src explicitly allows the exchange-rates API origin used by public/exchange.js',
+  );
+  assert(
+    tokens.includes('https://open.er-api.com'),
+    'connect-src explicitly allows the fallback exchange-rates API origin used by public/exchange.js',
   );
   // No unexpected extras: every non-'self' token must be an explicit https:// origin.
   for (const tok of tokens) {
@@ -129,11 +134,20 @@ function testCoreDirectivesPresent() {
   assert(!scriptSrc.includes("'unsafe-eval'"), "script-src does not allow 'unsafe-eval'");
 }
 
+function testServiceWorkerCacheVersion() {
+  section('service worker cache version invalidates stale static assets');
+  const cacheMatch = sw.match(/const CACHE_NAME = '([^']+)'/);
+  assert(cacheMatch && cacheMatch[1] === 'travel-helpers-v3',
+    'static cache is bumped to v3 after exchange changes');
+  assert(sw.includes("  '/exchange.js',"), 'service worker caches exchange.js');
+}
+
 async function main() {
   testExactlyOneCspMeta();
   testConnectSrcIsNarrow();
   testImgSrcIsNarrow();
   testCoreDirectivesPresent();
+  testServiceWorkerCacheVersion();
 
   console.log('\n══════════════════════════════════');
   console.log('Results: ' + passed + ' passed, ' + failed + ' failed');

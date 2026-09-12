@@ -14,6 +14,7 @@ const COUNTRIES = {
   NL: { name: 'Netherlands',     flag: '🇳🇱', currency: 'EUR' },
   BE: { name: 'Belgium',         flag: '🇧🇪', currency: 'EUR' },
   TR: { name: 'Turkey',          flag: '🇹🇷', currency: 'TRY' },
+  AZ: { name: 'Azerbaijan',      flag: '🇦🇿', currency: 'AZN' },
   GB: { name: 'United Kingdom',  flag: '🇬🇧', currency: 'GBP' },
   CH: { name: 'Switzerland',     flag: '🇨🇭', currency: 'CHF' },
   TH: { name: 'Thailand',        flag: '🇹🇭', currency: 'THB' },

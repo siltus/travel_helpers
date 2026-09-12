@@ -78,9 +78,10 @@ All UI logic is vanilla JS (no framework) loaded as `<script>` tags.
 * CSP `<meta>` in `index.html` restricts `script-src`, `style-src`,
   `font-src`, `object-src`, `frame-src` to `'self'` (plus
   `'unsafe-inline'` for script/style and `data:` for fonts and the
-  favicon SVG). `connect-src` is `'self' https://api.frankfurter.dev`
-  — the rates API in `exchange.js` is the only allowed external
-  endpoint; every other XHR must hit the same origin. `img-src` is
+  favicon SVG). `connect-src` is `'self' https://api.frankfurter.dev
+  https://open.er-api.com` — the rates APIs in `exchange.js` are the only
+  allowed external endpoints; every other XHR must hit the same origin.
+  `img-src` is
   `'self' data: blob:` — no external image origins are permitted; the
   `data:` token covers the inline favicon and `FileReader` data URLs
   used by the QR preview, `blob:` covers any future in-memory image

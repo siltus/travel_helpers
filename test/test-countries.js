@@ -40,13 +40,15 @@ section('countries: COUNTRIES table is complete and well-formed');
   const win = setup('');
   const countries = evalIn(win, 'COUNTRIES');
   const codes = Object.keys(countries);
-  assert(codes.length === 20, '20 countries listed: got ' + codes.length);
+  assert(codes.length === 21, '21 countries listed: got ' + codes.length);
   codes.forEach(code => {
     const c = countries[code];
     assert(typeof c.name === 'string' && c.name.length > 0, code + ' has name');
     assert(typeof c.currency === 'string' && c.currency.length === 3, code + ' has 3-letter currency');
     assert(typeof c.flag === 'string', code + ' has flag');
   });
+  assert(countries.AZ.name === 'Azerbaijan', 'Azerbaijan is listed');
+  assert(countries.AZ.currency === 'AZN', 'Azerbaijan uses AZN');
 }
 
 section('countries: populateCountrySelect fills options sorted by name');
@@ -90,12 +92,14 @@ section('countries: getSelectedCountry defaults to CZ when nothing stored');
   assert(win.getSelectedCountry() === 'CZ', 'default CZ');
 }
 
-section('countries: populateGlobalCountrySelect emits 20 options');
+section('countries: populateGlobalCountrySelect emits 21 options');
 {
   const win = setup('<select id="global-country-select"></select>');
   win.populateGlobalCountrySelect();
   const sel = win.document.getElementById('global-country-select');
-  assert(sel.querySelectorAll('option').length === 20, '20 options rendered');
+  assert(sel.querySelectorAll('option').length === 21, '21 options rendered');
+  assert(sel.querySelector('option[value="AZ"]').textContent.includes('Azerbaijan'),
+    'Azerbaijan option rendered');
 }
 
 section('countries: onGlobalCountryChange persists + triggers init-aware re-renders');

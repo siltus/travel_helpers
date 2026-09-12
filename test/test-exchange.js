@@ -13,7 +13,7 @@ function setup() {
     '<div id="rate-date"></div>' +
     '<div id="rate-tables"></div>',
   );
-  loadScripts(win, ['exchange.js']);
+  loadScripts(win, ['countries.js', 'exchange.js']);
   return win;
 }
 
@@ -23,7 +23,7 @@ async function run() {
     const win = setup();
     const CURRENCIES = evalIn(win, 'CURRENCIES');
     assert(Object.keys(CURRENCIES).length >= 30, 'at least 30 currencies');
-    ['EUR', 'USD', 'ILS', 'CZK', 'JPY', 'GBP', 'CHF'].forEach(c =>
+    ['EUR', 'USD', 'ILS', 'CZK', 'JPY', 'GBP', 'CHF', 'AZN'].forEach(c =>
       assert(CURRENCIES[c], 'CURRENCIES has ' + c));
   }
 
@@ -38,6 +38,58 @@ async function run() {
     const refIdx = opts.indexOf('EUR');
     const cnyIdx = opts.indexOf('CNY');
     assert(refIdx > cnyIdx, 'reference currencies (EUR) come after non-reference (CNY)');
+    assert(opts.includes('AZN'), 'Azerbaijani manat is available');
+  }
+
+  section('exchange: initExchange follows the selected country currency');
+  {
+    const win = setup();
+    win.localStorage.setItem('travelHelpers_selectedCountry', 'AZ');
+    win.localStorage.setItem('travelHelpers_exchangeRates', JSON.stringify({
+      rates: { EUR: 1, USD: 1.1, ILS: 3.9, AZN: 1.85 },
+      date: '2026-09-12',
+      timestamp: Date.now(),
+    }));
+    win.initExchange();
+    assert(win.document.getElementById('currency-select').value === 'AZN',
+      'selected country currency is AZN');
+    assert(win.localStorage.getItem('travelHelpers_selectedCurrency') === 'AZN',
+      'AZN persisted as selected currency');
+  }
+
+  section('exchange: fallback rates fill AZN when primary rates omit it');
+  {
+    const win = setup();
+    win.localStorage.setItem('travelHelpers_exchangeRates', JSON.stringify({
+      rates: { EUR: 1, USD: 1.1, ILS: 3.9 },
+      date: '2026-09-12',
+      timestamp: Date.now(),
+    }));
+    win.localStorage.setItem('travelHelpers_selectedCurrency', 'AZN');
+    win.fetch = function(url) {
+      assert(url === 'https://open.er-api.com/v6/latest/EUR',
+        'fallback rates requested for missing AZN');
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ result: 'success', rates: { AZN: 1.97 } }),
+      });
+    };
+    win.populateCurrencySelect();
+    await win.refreshRates(false);
+    assert(win.document.getElementById('currency-select').value === 'AZN',
+      'AZN remains selected');
+    assert(!win.document.getElementById('rate-tables').textContent.includes('NaN'),
+      'rate tables contain no NaN');
+    assert(win.document.getElementById('rate-tables').textContent.includes('1.97'),
+      'fallback AZN rate is rendered');
+  }
+
+  section('exchange: missing rates render N/A instead of NaN');
+  {
+    const win = setup();
+    evalIn(win, 'eurRates = { EUR: 1, USD: 1.1 };');
+    assert(win.fmtRate(win.convert(1, 'AZN', 'EUR')) === 'N/A',
+      'missing AZN conversion renders N/A');
   }
 
   section('exchange: fmtRate uses 2/4/6 decimals based on magnitude');
@@ -65,16 +117,22 @@ async function run() {
   {
     const win = setup();
     win.localStorage.setItem('travelHelpers_exchangeRates', JSON.stringify({
-      rates: { USD: 1.1, CZK: 25, EUR: 1 },
+      rates: { USD: 1.1, CZK: 25, EUR: 1, ILS: 3.9 },
       date: '2026-01-01',
       timestamp: Date.now(),
     }));
     win.populateCurrencySelect();
     win.document.getElementById('currency-select').value = 'CZK';
-    let fetchCalled = false;
-    win.fetch = function() { fetchCalled = true; return Promise.reject(new Error('should not fetch')); };
+    let primaryFetchCalled = false;
+    win.fetch = function(url) {
+      if (url === 'https://open.er-api.com/v6/latest/EUR') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: 'success', rates: {} }) });
+      }
+      primaryFetchCalled = true;
+      return Promise.reject(new Error('primary source should not fetch'));
+    };
     await win.refreshRates(false);
-    assert(fetchCalled === false, 'fetch not called when cache is fresh');
+    assert(primaryFetchCalled === false, 'primary source not fetched when cache is fresh');
     assert(win.document.getElementById('rate-date').textContent.includes('2026-01-01'),
       'rate-date set from cache');
     assert(win.document.getElementById('rate-tables').innerHTML.includes('CZK'),

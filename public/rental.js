@@ -148,6 +148,15 @@ const RENTAL_DATA = {
     parking: 'Valet parking is common in cities; use guarded car parks when possible.',
     tips: ['Bridges and motorways use HGS tolling', 'Driving style can be assertive in Istanbul', 'Avoid cash-only roadside fuel stations late at night'],
   },
+  AZ: {
+    idp: 'recommended',
+    side: 'right',
+    fuelLabels: { diesel: 'Dizel', petrol: 'Aİ-92 / Aİ-95 Benzin' },
+    pickup: rentalPickup(['Confirm whether travel on unpaved roads is covered']),
+    insurance: 'Low-excess cover is useful because road conditions vary outside major routes.',
+    parking: 'Use marked or guarded parking in Baku and avoid informal curbside spaces.',
+    tips: ['Traffic can be dense in Baku', 'Road quality varies outside major highways', 'Keep fuel topped up on remote routes'],
+  },
   GB: {
     idp: 'recommended',
     side: 'left',

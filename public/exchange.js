@@ -6,6 +6,7 @@ const AMOUNTS = [1, 5, 20, 100];
 const CACHE_KEY = 'travelHelpers_exchangeRates';
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 const SELECTED_CURRENCY_KEY = 'travelHelpers_selectedCurrency';
+const FALLBACK_RATES_URL = 'https://open.er-api.com/v6/latest/EUR';
 
 const CURRENCIES = {
   CZK: { name: 'Czech Koruna',        flag: '🇨🇿' },
@@ -14,6 +15,7 @@ const CURRENCIES = {
   RON: { name: 'Romanian Leu',        flag: '🇷🇴' },
   BGN: { name: 'Bulgarian Lev',       flag: '🇧🇬' },
   TRY: { name: 'Turkish Lira',        flag: '🇹🇷' },
+  AZN: { name: 'Azerbaijani Manat',  flag: '🇦🇿' },
   GBP: { name: 'British Pound',       flag: '🇬🇧' },
   CHF: { name: 'Swiss Franc',         flag: '🇨🇭' },
   SEK: { name: 'Swedish Krona',       flag: '🇸🇪' },
@@ -47,6 +49,15 @@ let rateDate = null;
 function initExchange() {
   exchangeInitialized = true;
   populateCurrencySelect();
+  const countryCode = typeof getSelectedCountry === 'function' ? getSelectedCountry() : '';
+  const countryCurrency = typeof COUNTRIES !== 'undefined' && COUNTRIES[countryCode]
+    ? COUNTRIES[countryCode].currency
+    : '';
+  const select = document.getElementById('currency-select');
+  if (select && CURRENCIES[countryCurrency]) {
+    select.value = countryCurrency;
+    localStorage.setItem(SELECTED_CURRENCY_KEY, countryCurrency);
+  }
   refreshRates(false);
 }
 
@@ -63,6 +74,36 @@ function populateCurrencySelect() {
     const c = CURRENCIES[code];
     return `<option value="${code}" ${code === saved ? 'selected' : ''}>${c.flag} ${c.name} (${code})</option>`;
   }).join('');
+}
+
+async function fillMissingRates(rates) {
+  const missing = Object.keys(CURRENCIES).filter(code =>
+    code !== 'EUR' && !Number.isFinite(rates[code])
+  );
+  if (!missing.length) return [];
+
+  const resp = await fetch(FALLBACK_RATES_URL);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} from fallback rates`);
+  const data = await resp.json();
+  if (data.result !== 'success' || !data.rates) {
+    throw new Error('Fallback rates response was invalid');
+  }
+
+  const added = [];
+  missing.forEach(code => {
+    if (Number.isFinite(data.rates[code])) {
+      rates[code] = data.rates[code];
+      added.push(code);
+    }
+  });
+  return added;
+}
+
+function showMissingRatesWarning(error) {
+  const errorEl = document.getElementById('exchange-error');
+  if (!errorEl) return;
+  errorEl.textContent = '⚠ Some currency rates are unavailable: ' + error.message;
+  errorEl.style.display = 'block';
 }
 
 function onCurrencyChange() {
@@ -83,7 +124,20 @@ async function refreshRates(force) {
         const data = JSON.parse(cached);
         if (Date.now() - data.timestamp < CACHE_DURATION) {
           eurRates = data.rates;
+          eurRates['EUR'] = 1;
           rateDate = data.date;
+          try {
+            const added = await fillMissingRates(eurRates);
+            if (added.length) {
+              localStorage.setItem(CACHE_KEY, JSON.stringify({
+                rates: eurRates,
+                date: rateDate,
+                timestamp: Date.now(),
+              }));
+            }
+          } catch (err) {
+            showMissingRatesWarning(err);
+          }
           renderExchangeTables();
           return;
         }
@@ -102,12 +156,19 @@ async function refreshRates(force) {
     eurRates = data.rates;
     eurRates['EUR'] = 1;
     rateDate = data.date;
+    let fallbackError = null;
+    try {
+      await fillMissingRates(eurRates);
+    } catch (err) {
+      fallbackError = err;
+    }
     localStorage.setItem(CACHE_KEY, JSON.stringify({
       rates: eurRates,
       date: rateDate,
       timestamp: Date.now()
     }));
     renderExchangeTables();
+    if (fallbackError) showMissingRatesWarning(fallbackError);
   } catch(err) {
     errorEl.textContent = '⚠ Failed to fetch exchange rates: ' + err.message;
     errorEl.style.display = 'block';
@@ -116,7 +177,20 @@ async function refreshRates(force) {
       try {
         const data = JSON.parse(cached);
         eurRates = data.rates;
+        eurRates['EUR'] = 1;
         rateDate = data.date;
+        try {
+          const added = await fillMissingRates(eurRates);
+          if (added.length) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+              rates: eurRates,
+              date: rateDate,
+              timestamp: Date.now(),
+            }));
+          }
+        } catch (fallbackErr) {
+          showMissingRatesWarning(fallbackErr);
+        }
         renderExchangeTables();
         errorEl.textContent += ' — showing cached rates';
       } catch(_e) { /* no luck */ }
@@ -128,11 +202,14 @@ async function refreshRates(force) {
 
 function convert(amount, fromCode, toCode) {
   if (fromCode === toCode) return amount;
-  const inEur = fromCode === 'EUR' ? amount : amount / eurRates[fromCode];
-  return toCode === 'EUR' ? inEur : inEur * eurRates[toCode];
+  const fromRate = fromCode === 'EUR' ? 1 : eurRates && eurRates[fromCode];
+  const toRate = toCode === 'EUR' ? 1 : eurRates && eurRates[toCode];
+  if (!Number.isFinite(fromRate) || !Number.isFinite(toRate)) return NaN;
+  return (amount / fromRate) * toRate;
 }
 
 function fmtRate(val) {
+  if (!Number.isFinite(val)) return 'N/A';
   const abs = Math.abs(val);
   let decimals;
   if (abs >= 1) decimals = 2;

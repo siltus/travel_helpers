@@ -152,6 +152,16 @@ const MEALS_DATA = {
     bill: 'Ask "Hesap, lütfen"',
     tips: ['Meze are meant for sharing', 'Tea is often offered after the meal'],
   },
+  AZ: {
+    lunch: { from: '12:00', to: '15:00' },
+    dinner: { from: '19:00', to: '22:00' },
+    kitchenCloses: 'Restaurants in central Baku often serve late.',
+    reservation: 'Recommended for popular restaurants on weekends',
+    water: 'Bottled water is common',
+    bread: 'Bread is commonly served and may be added to the bill',
+    bill: 'Ask "Hesab, zəhmət olmasa"',
+    tips: ['Tea often follows the meal', 'Shared dishes and long meals are common'],
+  },
   GB: {
     lunch: { from: '12:00', to: '14:30' },
     dinner: { from: '18:00', to: '21:00' },

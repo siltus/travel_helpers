@@ -76,6 +76,11 @@ const TRANSIT_DATA = {
       { city: 'Istanbul', card: 'Istanbulkart', buy: 'Machines at metro/ferry stops, kiosks', how: 'Load credit, tap on entry. Works on metro, tram, bus, ferry, funicular.', tip: 'Get one per person — transfers within 2h get discounted.' },
     ],
   },
+  AZ: {
+    cities: [
+      { city: 'Baku', card: 'BakuCard', buy: 'Metro stations and BakuCard terminals', how: 'Load credit and tap at metro gates or when boarding supported buses.', tip: 'Keep some cash for transport outside Baku.' },
+    ],
+  },
   GB: {
     cities: [
       { city: 'London', card: 'Oyster / Contactless', buy: 'Tube stations, oyster online', how: 'Tap in, tap out. Daily cap applied automatically.', tip: 'Contactless bank card = same fares as Oyster, no deposit needed.' },

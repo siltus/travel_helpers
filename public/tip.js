@@ -100,6 +100,13 @@ const TIP_DATA = {
     hotel: 'Porter: 10–20 TRY/bag',
     note: '10–15% at restaurants. Round up taxis. Tip in local currency.',
   },
+  AZ: {
+    restaurant: [5, 10],
+    cafe: [0, 5],
+    taxi: [0, 5],
+    hotel: 'Porter: 2–5 AZN/bag',
+    note: '5–10% is appreciated at restaurants. Check whether a service charge is included.',
+  },
   GB: {
     restaurant: [10, 15],
     cafe: [0, 0],

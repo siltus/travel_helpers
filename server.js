@@ -17,7 +17,7 @@ const EMBASSY_PATHS = {
   CZ: 'czechrepublic', PL: 'poland', HU: 'hungary', DE: 'berlin',
   AT: 'austria', IT: 'italy', FR: 'france', ES: 'spain',
   PT: 'portugal', GR: 'greece', HR: 'croatia', NL: 'netherlands',
-  BE: 'belgium', TR: 'ankara', GB: 'england', CH: 'switzerland',
+  BE: 'belgium', TR: 'ankara', AZ: 'azerbaijan', GB: 'england', CH: 'switzerland',
   TH: 'thailand', JP: 'japan', RO: 'romania', BG: 'bulgaria',
 };
 
@@ -25,7 +25,7 @@ const EMBASSY_CITIES = {
   CZ: 'Prague', PL: 'Warsaw', HU: 'Budapest', DE: 'Berlin',
   AT: 'Vienna', IT: 'Rome', FR: 'Paris', ES: 'Madrid',
   PT: 'Lisbon', GR: 'Athens', HR: 'Zagreb', NL: 'The Hague',
-  BE: 'Brussels', TR: 'Ankara', GB: 'London', CH: 'Bern',
+  BE: 'Brussels', TR: 'Ankara', AZ: 'Baku', GB: 'London', CH: 'Bern',
   TH: 'Bangkok', JP: 'Tokyo', RO: 'Bucharest', BG: 'Sofia',
 };
 
@@ -123,7 +123,8 @@ function parseEmbassyHtml(html, code) {
       .replace(/,\s*,/g, ',')
       .trim()
       .replace(/^,\s*/, '')
-      .replace(/,\s*$/, '');
+      .replace(/,\s*$/, '')
+      .replace(/\bBakı\b/g, 'Baku');
   }
 
   // Working hours
@@ -144,7 +145,7 @@ function parseEmbassyHtml(html, code) {
 
   // Google Maps link
   const mapsMatch = html.match(/href="(https:\/\/www\.google\.com\/maps\/dir\/\/[^"]+)"/);
-  if (mapsMatch) result.mapsUrl = mapsMatch[1].replace(/&amp;/g, '&');
+  if (mapsMatch) result.mapsUrl = mapsMatch[1].replace(/&amp;/g, '&').replace(/\bBakı\b/g, 'Baku');
 
   return result;
 }
